@@ -122,7 +122,86 @@ FName        LName      Age
 Jonathan     Smythe     28
 Jon          Smith      32
 
-TODO: If there is interest, I could write a command to lay out a line with those spaces, ignoring column specifications to make it easier to lay a table out.
-Similarly, if there is interest, I could create the functionality to allow you to visually select a table and have the plugin deduce the longest columns
-across all rows and lay the table out automatically.
+Version 2.0:
+
+When calling Gettabstopsfromcurrentline, the last column size is set to the larger of the value of g:TableHelper_lastColumnSize or the length of the text in
+the last column being measured. The very last column of text isn't truncated (unless lines with more columns than measured show up), but this value is used
+when generating separator lines.
+
+Added some commands:
+
+Aligntable: given a range of lines (visually selected, for example), will automatically figure out the optimum layout. Takes optional arguments: the column
+alignments (see Setcolumnalignments) and the amount by which the table should be indented. (If not specified, all alignments take the defaults as specified
+for Setcolumnalignments and the indent becomes the indentation of the first line in the range).
+
+To specify just an indent, pass in 'l' for the first argument (that's the default and all values get left-aligned anyway).
+
+As an example, the following table
+
+First name            Last name               Age
+------  -----  -----
+John   Smith   28
+Jane             Doe          32
+
+can be selected visually and Aligntable executed to get (with a default column margin value of 2):
+
+First name  Last name  Age
+------      -----      -----
+John        Smith      28
+Jane        Doe        32
+
+Executing with a column margin of 10, on the other hand, gives:
+
+First name          Last name          Age
+------              -----              -----
+John                Smith              28
+Jane                Doe                32
+
+The column positions used are stored (clobbering any previous calls to Gettabstopsfromcurrentline) so new lines may be added to this table and reformatted
+quickly using the standard reformatting hotkey.
+
+Addseparatorline: adds a separator line just below the current cursor line. If the tab stops are from this line
+
+First name          Last name          Age
+
+then executing "Addseparatorline" with the cursor on the line itself gives
+
+Addseparatorline
+------------------  -----------------  ----------
+
+The space between separators is determined by g:TableHelper_columnMargin.
+
+The command takes these arguments, all optional (with default values):
+
+Addseparatorline [continuous=0] [separator characters=g:TableHelper_separatorCharacters]
+
+The first argument is whether to generate a continuous line (defaults to 0) or one with breaks at the column margins:
+
+Addseparatorline 0 -=
+-=-=-=-=-=-=-=-=-=  -=-=-=-=-=-=-=-=-  -=-=-=-=-=
+
+Addseparatorline 1 -=+
+-=+-=+-=+-=+-=+-=+-=+-=+-=+-=+-=+-=+-=+-=+-=+-=+-
+
+And the second determines the separators to use for this line.
+
+Addseparatorline 1 :-
+:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:
+
+Setcolumnalignments: Takes a string consisting of an arbitrary number of 'l' (left), 'c' (center) and 'r' (right); for example, 'llrlc'. When reformatting a
+line or calling Aligntable, this value is taken into consideration for how to align the value in a particular column. Thus, 'llrlc' means that the first
+two columns will be left-aligned, the third will be right-aligned, and then left and, finally, the last column will be centered in the allocated space.
+
+If the table contains more columns than specified in the alignment, the remaining columns are all left-aligned ('l'). Column values that are too long (doesn't
+happen when Aligntable is called unless the lines are added after the fact) end up being left-aligned (or truncated, in which case they fill up the entire
+column and alignment doesn't enter into it).
+
+The alignments are stored on a per-buffer basis (just like the table column stops).
+
+New options:
+
+g:TableHelper_lastColumnSize (default 10): used for adding separator lines; specifies the minimum length for the last column
+
+g:TableHelper_separatorCharacters (default '-'): the character string that the separator comprises; gets repeated and truncated as necessary and starts over
+every time there is a column break (repeats continuously if no break is chosen)
 
